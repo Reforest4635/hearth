@@ -9,7 +9,19 @@ const path = require("path");
 
 const PORT = 8099;
 const PUBLIC_DIR = path.join(__dirname, "public");
-const DATA_FILE = "/data/state.json";
+// State lives in /share so it survives add-on reinstalls and is identical
+// whether the add-on is installed locally or from a Git repository.
+const DATA_DIR = "/share/household_ledger";
+const DATA_FILE = path.join(DATA_DIR, "state.json");
+const LEGACY_FILE = "/data/state.json"; // pre-1.2.0 location
+
+try { fs.mkdirSync(DATA_DIR, { recursive: true }); } catch (e) {}
+try {
+  if (!fs.existsSync(DATA_FILE) && fs.existsSync(LEGACY_FILE)) {
+    fs.copyFileSync(LEGACY_FILE, DATA_FILE);
+    console.log("Migrated state from /data/state.json to " + DATA_FILE);
+  }
+} catch (e) { console.error("migration failed", e); }
 
 const MIME = {
   ".html": "text/html; charset=utf-8",

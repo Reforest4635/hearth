@@ -1,5 +1,5 @@
 name: Household Ledger
-version: "1.1.1"
+version: "1.2.0"
 slug: household_ledger
 description: Family bills, pay periods, and debt tracker
 arch:
@@ -15,3 +15,5 @@ panel_title: Ledger
 panel_admin: false
 options: {}
 schema: {}
+map:
+  - share:rw
