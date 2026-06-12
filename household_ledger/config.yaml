@@ -1,7 +1,7 @@
 name: Household Ledger
-version: "1.2.0"
+version: "2.0.0"
 slug: household_ledger
-description: Family bills, pay periods, and debt tracker
+description: Family bills, debts, home maintenance and garden tracker
 arch:
   - aarch64
   - amd64
