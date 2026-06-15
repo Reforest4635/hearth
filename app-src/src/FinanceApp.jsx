@@ -566,7 +566,7 @@ export default function FinanceApp() {
 
       <header>
         <div className="topline">
-          <span className="eyebrow">Household ledger</span>
+          <span className="eyebrow">Hearth</span>
           <button className="themebtn" onClick={changeTheme} title="Switch theme">◐ {THEME_NAME[theme]}</button>
         </div>
         {isBillTab ? (

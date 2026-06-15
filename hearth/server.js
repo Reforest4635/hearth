@@ -1,6 +1,8 @@
-// Household Ledger add-on server v2 — SQLite-backed
-// DB lives at /share/household_ledger/ledger.db (WAL mode).
-// One-time migration imports the old /share state.json into tables.
+// Hearth add-on server — SQLite-backed home management hub
+// DB lives at /share/hearth/hearth.db (WAL mode).
+// Migrations run in order on first start:
+//   1. an existing SQLite db from the old "household_ledger" add-on, or failing that
+//   2. the pre-SQLite state.json from the JSON era.
 
 const http = require("http");
 const fs = require("fs");
@@ -9,12 +11,27 @@ const { DatabaseSync } = require("node:sqlite");
 
 const PORT = 8099;
 const PUBLIC_DIR = path.join(__dirname, "public");
-const DATA_DIR = "/share/household_ledger";
-const DB_FILE = path.join(DATA_DIR, "ledger.db");
-const LEGACY_JSON = path.join(DATA_DIR, "state.json");
+const DATA_DIR = "/share/hearth";
+const DB_FILE = path.join(DATA_DIR, "hearth.db");
+// Old "Household Ledger" add-on locations, in case we're migrating from it
+const OLD_DIR = "/share/household_ledger";
+const OLD_DB = path.join(OLD_DIR, "ledger.db");
+const LEGACY_JSON = path.join(OLD_DIR, "state.json");
 const LEGACY_DATA = "/data/state.json";
 
 fs.mkdirSync(DATA_DIR, { recursive: true });
+
+// Migration 1: lift the whole SQLite db from the old add-on if we don't have one yet.
+// Copying the file wholesale preserves tasks, logs, paid history — everything.
+if (!fs.existsSync(DB_FILE) && fs.existsSync(OLD_DB)) {
+  try {
+    fs.copyFileSync(OLD_DB, DB_FILE);
+    for (const ext of ["-wal", "-shm"]) {
+      if (fs.existsSync(OLD_DB + ext)) fs.copyFileSync(OLD_DB + ext, DB_FILE + ext);
+    }
+    console.log("Migrated database from " + OLD_DB);
+  } catch (e) { console.error("db migration failed", e); }
+}
 const db = new DatabaseSync(DB_FILE);
 db.exec(`
   PRAGMA journal_mode=WAL;
@@ -206,4 +223,4 @@ const server = http.createServer(async (req, res) => {
   });
 });
 
-server.listen(PORT, "0.0.0.0", () => console.log(`Household Ledger v2 (SQLite) on ${PORT}, db: ${DB_FILE}`));
+server.listen(PORT, "0.0.0.0", () => console.log(`Hearth (SQLite) on ${PORT}, db: ${DB_FILE}`));
