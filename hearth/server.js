@@ -54,6 +54,12 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT, task_id TEXT NOT NULL,
     done_at TEXT NOT NULL, notes TEXT DEFAULT '');
   CREATE INDEX IF NOT EXISTS idx_log_task ON task_log(task_id, done_at DESC);
+  CREATE TABLE IF NOT EXISTS plants(
+    id TEXT PRIMARY KEY, name TEXT NOT NULL, type TEXT DEFAULT 'vegetable',
+    qty TEXT DEFAULT '', source TEXT DEFAULT '', sun TEXT DEFAULT '',
+    sow_indoors TEXT DEFAULT '', sow_outdoors TEXT DEFAULT '', depth TEXT DEFAULT '',
+    spacing TEXT DEFAULT '', row_spacing TEXT DEFAULT '', germ_days TEXT DEFAULT '',
+    maturity_days TEXT DEFAULT '', height TEXT DEFAULT '', notes TEXT DEFAULT '', link TEXT DEFAULT '');
 `);
 
 // ---- one-time migration from the JSON era ----
@@ -117,6 +123,7 @@ function fullState() {
     cards: db.prepare("SELECT * FROM cards").all(),
     loans: db.prepare("SELECT * FROM loans").all(),
     tasks: db.prepare("SELECT * FROM tasks").all(),
+    plants: db.prepare("SELECT * FROM plants").all(),
     paid: db.prepare("SELECT month, key FROM paid").all().reduce((acc, r) => {
       (acc[r.month] = acc[r.month] || {})[r.key] = true; return acc;
     }, {}),
@@ -161,6 +168,7 @@ const server = http.createServer(async (req, res) => {
         cards: ["name", "rate", "balance", "min"],
         loans: ["name", "balance", "rate", "note"],
         tasks: ["domain", "name", "category", "interval_days", "last_done", "notes", "link"],
+        plants: ["name", "type", "qty", "source", "sun", "sow_indoors", "sow_outdoors", "depth", "spacing", "row_spacing", "germ_days", "maturity_days", "height", "notes", "link"],
       };
       if (TABLES[parts[0]]) {
         const table = parts[0], cols = TABLES[table], id = parts[1];

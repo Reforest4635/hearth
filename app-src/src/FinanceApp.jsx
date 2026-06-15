@@ -12,6 +12,45 @@ const uid = () => "x" + Math.random().toString(36).slice(2, 10);
 const FREQ_LABEL = { weekly: "weekly", bimonthly: "every 2 mo", yearly: "yearly" };
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
+// Typical seed-packet values for common crops, used to pre-fill the plant editor.
+// These are approximate starting points — varieties and your climate zone vary,
+// so everything stays editable after filling. Times in days; distances as labeled.
+const PLANT_TYPES = ["vegetable", "herb", "fruit", "flower", "other"];
+const PLANT_REF = {
+  "tomato":      { type: "vegetable", sun: "full", sow_indoors: "6–8 wks before last frost", sow_outdoors: "after last frost", depth: "1/4 in", spacing: "24 in", row_spacing: "36 in", germ_days: "6–14", maturity_days: "60–80", height: "3–6 ft" },
+  "pepper":      { type: "vegetable", sun: "full", sow_indoors: "8–10 wks before last frost", sow_outdoors: "after last frost", depth: "1/4 in", spacing: "18 in", row_spacing: "24 in", germ_days: "10–21", maturity_days: "60–90", height: "18–36 in" },
+  "cucumber":    { type: "vegetable", sun: "full", sow_indoors: "3–4 wks before last frost", sow_outdoors: "after last frost", depth: "1 in", spacing: "12 in", row_spacing: "48 in", germ_days: "3–10", maturity_days: "50–70", height: "vining" },
+  "lettuce":     { type: "vegetable", sun: "partial–full", sow_indoors: "4–6 wks before last frost", sow_outdoors: "early spring / fall", depth: "1/4 in", spacing: "8 in", row_spacing: "12 in", germ_days: "7–10", maturity_days: "45–55", height: "6–12 in" },
+  "carrot":      { type: "vegetable", sun: "full", sow_indoors: "not recommended", sow_outdoors: "2–3 wks before last frost", depth: "1/4 in", spacing: "3 in", row_spacing: "12 in", germ_days: "14–21", maturity_days: "70–80", height: "12 in" },
+  "bean":        { type: "vegetable", sun: "full", sow_indoors: "not recommended", sow_outdoors: "after last frost", depth: "1 in", spacing: "4 in", row_spacing: "24 in", germ_days: "8–10", maturity_days: "50–65", height: "bush / pole" },
+  "pea":         { type: "vegetable", sun: "full", sow_indoors: "not recommended", sow_outdoors: "4–6 wks before last frost", depth: "1 in", spacing: "2 in", row_spacing: "18 in", germ_days: "7–14", maturity_days: "60–70", height: "2–6 ft" },
+  "zucchini":    { type: "vegetable", sun: "full", sow_indoors: "3–4 wks before last frost", sow_outdoors: "after last frost", depth: "1 in", spacing: "24 in", row_spacing: "36 in", germ_days: "5–10", maturity_days: "50–65", height: "2–3 ft" },
+  "squash":      { type: "vegetable", sun: "full", sow_indoors: "3–4 wks before last frost", sow_outdoors: "after last frost", depth: "1 in", spacing: "36 in", row_spacing: "48 in", germ_days: "5–10", maturity_days: "80–110", height: "vining" },
+  "pumpkin":     { type: "vegetable", sun: "full", sow_indoors: "2–3 wks before last frost", sow_outdoors: "after last frost", depth: "1 in", spacing: "36–60 in", row_spacing: "72 in", germ_days: "5–10", maturity_days: "90–120", height: "vining" },
+  "radish":      { type: "vegetable", sun: "partial–full", sow_indoors: "not recommended", sow_outdoors: "early spring / fall", depth: "1/2 in", spacing: "2 in", row_spacing: "6 in", germ_days: "4–7", maturity_days: "25–30", height: "6 in" },
+  "beet":        { type: "vegetable", sun: "full", sow_indoors: "not recommended", sow_outdoors: "2–4 wks before last frost", depth: "1/2 in", spacing: "4 in", row_spacing: "12 in", germ_days: "5–10", maturity_days: "50–70", height: "12 in" },
+  "spinach":     { type: "vegetable", sun: "partial–full", sow_indoors: "not recommended", sow_outdoors: "early spring / fall", depth: "1/2 in", spacing: "4 in", row_spacing: "12 in", germ_days: "7–14", maturity_days: "40–50", height: "6–12 in" },
+  "kale":        { type: "vegetable", sun: "full–partial", sow_indoors: "5–7 wks before last frost", sow_outdoors: "spring / fall", depth: "1/4 in", spacing: "18 in", row_spacing: "24 in", germ_days: "5–10", maturity_days: "55–75", height: "12–24 in" },
+  "broccoli":    { type: "vegetable", sun: "full", sow_indoors: "6–8 wks before last frost", sow_outdoors: "spring / fall", depth: "1/4 in", spacing: "18 in", row_spacing: "24 in", germ_days: "5–10", maturity_days: "60–90", height: "18–24 in" },
+  "cabbage":     { type: "vegetable", sun: "full", sow_indoors: "6–8 wks before last frost", sow_outdoors: "spring / fall", depth: "1/4 in", spacing: "18 in", row_spacing: "24 in", germ_days: "5–10", maturity_days: "70–100", height: "12–18 in" },
+  "onion":       { type: "vegetable", sun: "full", sow_indoors: "8–10 wks before last frost", sow_outdoors: "early spring", depth: "1/2 in", spacing: "4 in", row_spacing: "12 in", germ_days: "7–14", maturity_days: "90–120", height: "12–18 in" },
+  "basil":       { type: "herb", sun: "full", sow_indoors: "6 wks before last frost", sow_outdoors: "after last frost", depth: "1/4 in", spacing: "10 in", row_spacing: "12 in", germ_days: "5–10", maturity_days: "60–75", height: "12–24 in" },
+  "cilantro":    { type: "herb", sun: "full–partial", sow_indoors: "not recommended", sow_outdoors: "early spring / fall", depth: "1/4 in", spacing: "6 in", row_spacing: "12 in", germ_days: "7–14", maturity_days: "45–70", height: "12–24 in" },
+  "parsley":     { type: "herb", sun: "full–partial", sow_indoors: "8–10 wks before last frost", sow_outdoors: "spring", depth: "1/4 in", spacing: "8 in", row_spacing: "12 in", germ_days: "14–28", maturity_days: "70–90", height: "12 in" },
+  "dill":        { type: "herb", sun: "full", sow_indoors: "not recommended", sow_outdoors: "after last frost", depth: "1/4 in", spacing: "10 in", row_spacing: "18 in", germ_days: "10–21", maturity_days: "40–60", height: "24–36 in" },
+  "marigold":    { type: "flower", sun: "full", sow_indoors: "4–6 wks before last frost", sow_outdoors: "after last frost", depth: "1/8 in", spacing: "8 in", row_spacing: "10 in", germ_days: "5–10", maturity_days: "45–55", height: "6–18 in" },
+  "sunflower":   { type: "flower", sun: "full", sow_indoors: "not recommended", sow_outdoors: "after last frost", depth: "1 in", spacing: "12 in", row_spacing: "24 in", germ_days: "7–10", maturity_days: "70–100", height: "3–10 ft" },
+  "zinnia":      { type: "flower", sun: "full", sow_indoors: "4–6 wks before last frost", sow_outdoors: "after last frost", depth: "1/4 in", spacing: "9 in", row_spacing: "12 in", germ_days: "5–7", maturity_days: "60–70", height: "12–36 in" },
+};
+// match a typed name against the reference (e.g. "Brandywine Tomato" -> "tomato")
+function refLookup(name) {
+  const n = (name || "").toLowerCase();
+  let hit = null;
+  for (const key of Object.keys(PLANT_REF)) if (n.includes(key)) { hit = key; break; }
+  return hit ? { key: hit, data: PLANT_REF[hit] } : null;
+}
+const PLANT_FIELDS = ["type", "sun", "sow_indoors", "sow_outdoors", "depth", "spacing", "row_spacing", "germ_days", "maturity_days", "height"];
+
 // ---------- API ----------
 
 const API_BASE = (() => {
@@ -331,6 +370,143 @@ function TaskRow({ task, log, onDone, onEdit, onDelete, onToggleLog }) {
 
 // ---------- Main app ----------
 
+function PlantRow({ plant, open, onToggle, onEdit, onDelete }) {
+  const facts = [];
+  const sow = plant.sow_outdoors || plant.sow_indoors;
+  if (sow) facts.push("sow " + sow);
+  if (plant.germ_days) facts.push("germ " + plant.germ_days + "d");
+  if (plant.maturity_days) facts.push("ready " + plant.maturity_days + "d");
+  if (plant.spacing) facts.push("space " + plant.spacing);
+  const detail = [
+    ["Sun", plant.sun], ["Sow indoors", plant.sow_indoors], ["Sow outdoors", plant.sow_outdoors],
+    ["Seed depth", plant.depth], ["Spacing", plant.spacing], ["Row spacing", plant.row_spacing],
+    ["Germination", plant.germ_days && plant.germ_days + " days"],
+    ["Days to maturity", plant.maturity_days && plant.maturity_days + " days"],
+    ["Height", plant.height], ["On hand", plant.qty], ["Source", plant.source],
+  ].filter(([, v]) => v);
+  return (
+    <div className="billrow taskrow">
+      <div className="taskhead">
+        <div className="billmain">
+          <div className="billname">
+            {plant.name}
+            {plant.type && <span className="tag">{plant.type}</span>}
+            {plant.qty && <span className="tag freq">{plant.qty}</span>}
+          </div>
+          {facts.length > 0 && <div className="billnote">{facts.join(" · ")}</div>}
+        </div>
+        <div className="rowacts">
+          {plant.link && <a className="mini paylink" href={plant.link} target="_blank" rel="noopener noreferrer">info ↗</a>}
+          <button className="mini" onClick={onToggle}>{open ? "hide" : "details"}</button>
+          <button className="mini" onClick={onEdit}>edit</button>
+          <button className="mini" onClick={onDelete}>×</button>
+        </div>
+      </div>
+      {open && (
+        <div className="tasklog plantdetail">
+          {detail.map(([k, v]) => (
+            <div key={k} className="logline">
+              <span className="detailkey">{k}</span>
+              <span className="detailval">{v}</span>
+            </div>
+          ))}
+          {plant.notes && <div className="billnote">{plant.notes}</div>}
+          {detail.length === 0 && !plant.notes && <div className="billnote">No details yet — edit to add growing data.</div>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PlantModal({ draft, setDraft, onSave, onCancel }) {
+  const set = (k) => (e) => setDraft({ ...draft, [k]: e.target.value });
+  const ref = refLookup(draft.name);
+  const fillStandard = () => {
+    if (!ref) return;
+    const next = { ...draft };
+    for (const f of PLANT_FIELDS) if (!next[f]) next[f] = ref.data[f] || "";
+    setDraft(next);
+  };
+  return (
+    <div className="overlay" onClick={onCancel}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <h3>{draft.id ? "Edit plant" : "Add plant / seed"}</h3>
+        <label>Name / variety
+          <input value={draft.name} placeholder="Brandywine Tomato" list="plantnames" onChange={set("name")} />
+          <datalist id="plantnames">
+            {Object.keys(PLANT_REF).map((k) => <option key={k} value={k[0].toUpperCase() + k.slice(1)} />)}
+          </datalist>
+        </label>
+        {ref && (
+          <button className="btn ghost fillbtn" onClick={fillStandard}>
+            ↓ Fill standard data for “{ref.key}” (blank fields only)
+          </button>
+        )}
+        <div className="modalrow">
+          <label>Type
+            <select value={draft.type || "vegetable"} onChange={set("type")}>
+              {PLANT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </label>
+          <label>On hand
+            <input value={draft.qty || ""} placeholder="1 packet" onChange={set("qty")} />
+          </label>
+        </div>
+        <div className="modalrow">
+          <label>Sun
+            <input value={draft.sun || ""} placeholder="full" onChange={set("sun")} />
+          </label>
+          <label>Seed depth
+            <input value={draft.depth || ""} placeholder="1/4 in" onChange={set("depth")} />
+          </label>
+        </div>
+        <div className="modalrow">
+          <label>Sow indoors
+            <input value={draft.sow_indoors || ""} placeholder="6–8 wks before frost" onChange={set("sow_indoors")} />
+          </label>
+          <label>Sow outdoors
+            <input value={draft.sow_outdoors || ""} placeholder="after last frost" onChange={set("sow_outdoors")} />
+          </label>
+        </div>
+        <div className="modalrow">
+          <label>Germination (days)
+            <input value={draft.germ_days || ""} placeholder="6–14" onChange={set("germ_days")} />
+          </label>
+          <label>Days to maturity
+            <input value={draft.maturity_days || ""} placeholder="60–80" onChange={set("maturity_days")} />
+          </label>
+        </div>
+        <div className="modalrow">
+          <label>Spacing
+            <input value={draft.spacing || ""} placeholder="24 in" onChange={set("spacing")} />
+          </label>
+          <label>Row spacing
+            <input value={draft.row_spacing || ""} placeholder="36 in" onChange={set("row_spacing")} />
+          </label>
+        </div>
+        <div className="modalrow">
+          <label>Height
+            <input value={draft.height || ""} placeholder="3–6 ft" onChange={set("height")} />
+          </label>
+          <label>Source
+            <input value={draft.source || ""} placeholder="Baker Creek" onChange={set("source")} />
+          </label>
+        </div>
+        <label>Link
+          <input value={draft.link || ""} placeholder="seed page…" inputMode="url" onChange={set("link")} />
+        </label>
+        <label>Notes
+          <input value={draft.notes || ""} onChange={set("notes")} />
+        </label>
+        <div className="modalacts">
+          <button className="btn ghost" onClick={onCancel}>Cancel</button>
+          <button className="btn solid" onClick={onSave} disabled={!draft.name}>Save</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function FinanceApp() {
   const now = new Date();
   const today = now.getDate();
@@ -356,6 +532,10 @@ export default function FinanceApp() {
   const [cards, setCards] = useState([]);
   const [loans, setLoans] = useState([]);
   const [tasks, setTasks] = useState([]);
+  const [plants, setPlants] = useState([]);
+  const [gardenView, setGardenView] = useState("tasks"); // tasks | plants
+  const [plantDraft, setPlantDraft] = useState(null);
+  const [openPlants, setOpenPlants] = useState({}); // plantId -> expanded
   const [paid, setPaid] = useState({});
   const [balances, setBalances] = useState({ household: "", work: "" });
   const [range, setRange] = useState({ from: 1, to: 31 });
@@ -376,6 +556,7 @@ export default function FinanceApp() {
         setCards(s.cards || []);
         setLoans(s.loans || []);
         setTasks(s.tasks || []);
+        setPlants(s.plants || []);
         setPaid(s.paid || {});
         if (s.balances) setBalances(s.balances);
         if (s.range) setRange(s.range);
@@ -487,6 +668,33 @@ export default function FinanceApp() {
     catch (e) { console.error(e); }
   };
 
+  // ---- plants ----
+  const savePlant = () => {
+    const clean = { ...plantDraft };
+    if (clean.link) {
+      clean.link = clean.link.trim();
+      if (clean.link && !/^https?:\/\//i.test(clean.link)) clean.link = "https://" + clean.link;
+    }
+    if (clean.id) {
+      setPlants(plants.map((p) => (p.id === clean.id ? clean : p)));
+      quietly(api(`plants/${clean.id}`, "PUT", clean));
+    } else {
+      clean.id = uid();
+      setPlants([...plants, clean]);
+      quietly(api("plants", "POST", clean));
+    }
+    setPlantDraft(null);
+  };
+  const deletePlant = (p) => {
+    if (!confirm(`Delete ${p.name}?`)) return;
+    setPlants(plants.filter((x) => x.id !== p.id));
+    quietly(api(`plants/${p.id}`, "DELETE"));
+  };
+  const sortedPlants = useMemo(
+    () => [...plants].sort((a, b) => (a.type || "").localeCompare(b.type || "") || a.name.localeCompare(b.name)),
+    [plants]
+  );
+
   // ---- debts ----
   const saveDebt = () => {
     const d = { ...debtDraft };
@@ -537,8 +745,10 @@ export default function FinanceApp() {
   }, [filtered, monthPaid]);
 
   const balKey = tab === "work" ? "work" : "household";
+  const hasBal = balances[balKey] !== "";
   const balance = parseFloat(balances[balKey]) || 0;
-  const afterBills = balance - totals.left;
+  const afterAll = balance - totals.due;     // balance − full period total
+  const afterUnpaid = balance - totals.left; // balance − still-unpaid only
 
   const cardTotals = useMemo(() => ({
     bal: cards.reduce((s, c) => s + c.balance, 0),
@@ -637,9 +847,10 @@ export default function FinanceApp() {
             </div>
             <div className="cell">
               <label>After bills</label>
-              <div className={"big " + (afterBills < 0 ? "neg" : "pos")}>
-                {balances[balKey] === "" ? "—" : fmt(afterBills)}
+              <div className={"big " + (afterAll < 0 ? "neg" : "pos")}>
+                {hasBal ? fmt(afterAll) : "—"}
               </div>
+              <div className="subfig">{hasBal ? fmt(afterUnpaid) : "—"} after unpaid only</div>
             </div>
           </section>
 
@@ -667,7 +878,14 @@ export default function FinanceApp() {
         </>
       )}
 
-      {isTaskTab && (
+      {isTaskTab && tab === "garden" && (
+        <nav className="subtabs">
+          <button className={"subtab" + (gardenView === "tasks" ? " on" : "")} onClick={() => setGardenView("tasks")}>Tasks</button>
+          <button className={"subtab" + (gardenView === "plants" ? " on" : "")} onClick={() => setGardenView("plants")}>Plants &amp; seeds</button>
+        </nav>
+      )}
+
+      {isTaskTab && !(tab === "garden" && gardenView === "plants") && (
         <>
           <section className="strip">
             <div className="cell">
@@ -702,6 +920,29 @@ export default function FinanceApp() {
               onClick={() => setTaskDraft({ id: null, name: "", category: "", interval_days: null, last_done: null, notes: "", link: "" })}>
               + Add task
             </button>
+          </div>
+        </>
+      )}
+
+      {tab === "garden" && gardenView === "plants" && (
+        <>
+          <section className="list">
+            {sortedPlants.map((p) => (
+              <PlantRow key={p.id} plant={p} open={!!openPlants[p.id]}
+                onToggle={() => setOpenPlants({ ...openPlants, [p.id]: !openPlants[p.id] })}
+                onEdit={() => setPlantDraft({ ...p })}
+                onDelete={() => deletePlant(p)} />
+            ))}
+            {sortedPlants.length === 0 && (
+              <div className="empty">No plants yet. Add one — type a common name like “tomato” and tap Fill standard data.</div>
+            )}
+          </section>
+          <div className="footacts">
+            <button className="btn solid"
+              onClick={() => setPlantDraft({ id: null, name: "", type: "vegetable", qty: "", source: "", sun: "", sow_indoors: "", sow_outdoors: "", depth: "", spacing: "", row_spacing: "", germ_days: "", maturity_days: "", height: "", notes: "", link: "" })}>
+              + Add plant
+            </button>
+            <div className="monthtotal">{sortedPlants.length} in inventory</div>
           </div>
         </>
       )}
@@ -766,6 +1007,7 @@ export default function FinanceApp() {
 
       {draft && <EditModal draft={draft} setDraft={setDraft} onSave={saveDraft} onCancel={() => setDraft(null)} />}
       {taskDraft && <TaskModal draft={taskDraft} setDraft={setTaskDraft} onSave={saveTask} onCancel={() => setTaskDraft(null)} domainLabel={domainLabel} />}
+      {plantDraft && <PlantModal draft={plantDraft} setDraft={setPlantDraft} onSave={savePlant} onCancel={() => setPlantDraft(null)} />}
       {debtDraft && <DebtModal draft={debtDraft} setDraft={setDebtDraft} onSave={saveDebt} onCancel={() => setDebtDraft(null)} />}
     </div>
   );
@@ -817,6 +1059,14 @@ h1 { font-size:26px; font-weight:750; letter-spacing:-0.01em; }
   border-radius:8px; font-size:14px; font-weight:600; color:var(--muted); cursor:pointer;
 }
 .tab.on { background:var(--accent); border-color:var(--accent); color:var(--on-accent); }
+.subtabs { display:flex; gap:6px; margin:0 0 12px; }
+.subtab { flex:1; padding:7px 0; border:1px solid var(--line); background:transparent; border-radius:8px; font-size:13px; font-weight:600; color:var(--muted); cursor:pointer; }
+.subtab.on { background:var(--green-soft); border-color:var(--green); color:var(--green); }
+.plantdetail { display:grid; grid-template-columns:1fr 1fr; gap:4px 16px; }
+.detailkey { font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); }
+.detailval { font-size:13px; font-weight:600; margin-left:8px; }
+.plantdetail .billnote { grid-column:1 / -1; }
+.fillbtn { font-size:12.5px; padding:7px 10px; text-align:left; }
 .tab:focus-visible, .check:focus-visible, .btn:focus-visible, .mini:focus-visible, .chip:focus-visible { outline:2px solid var(--green); outline-offset:2px; }
 
 .rangebar {
@@ -916,6 +1166,7 @@ h1 { font-size:26px; font-weight:750; letter-spacing:-0.01em; }
 .cardfill { height:100%; background:var(--amber); border-radius:2px; }
 .cardnums { text-align:right; }
 .minlabel { font-size:11px; color:var(--muted); margin-top:1px; }
+.subfig { font-size:11.5px; color:var(--muted); margin-top:3px; font-variant-numeric:tabular-nums; }
 .grandtotal {
   margin-top:18px; padding:14px; text-align:center; background:var(--accent); color:var(--on-accent);
   border-radius:10px; font-size:14px;
