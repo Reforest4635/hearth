@@ -221,6 +221,9 @@ const server = http.createServer(async (req, res) => {
   if (!file.startsWith(PUBLIC_DIR)) { res.writeHead(403); return res.end("Forbidden"); }
   fs.readFile(file, (err, data) => {
     if (err) {
+      // A missing /assets/ file is a real 404 — never return the HTML shell for
+      // it, or the browser reports a misleading "not a valid JS MIME type" error.
+      if (rel.startsWith("/assets/")) { res.writeHead(404); return res.end("Not found"); }
       return fs.readFile(path.join(PUBLIC_DIR, "index.html"), (e2, html) => {
         if (e2) { res.writeHead(404); return res.end("Not found"); }
         res.writeHead(200, { "Content-Type": MIME[".html"] }); res.end(html);
